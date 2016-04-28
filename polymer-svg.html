@@ -1,0 +1,41 @@
+<!-- Allows to use Polymer svg element inside <svg tag> -->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<script>
+  Polymer.Base.getNativePrototype = function (tag) {
+  var retval = Object.getPrototypeOf(document.createElement(tag));
+
+  if (retval.toString().indexOf("HTMLUnknownElement") > 0) {
+    // TODO: would be good to test against a list of svg allowed tags
+    // second attempt using svg namespace
+    var svgProto = Object.getPrototypeOf(document.createElementNS("http://www.w3.org/2000/svg",tag));
+    return svgProto;
+  }
+  
+return Object.getPrototypeOf(document.createElement(tag));
+};
+
+
+Polymer.Base._prepTemplate = function () {
+if (this._template === undefined) {
+this._template = Polymer.DomModule.import(this.is, 'template');
+}
+if (this._template && this._template.hasAttribute('is')) {
+this._warn(this._logf('_prepTemplate', 'top-level Polymer template ' + 'must not be a type-extension, found', this._template, 'Move inside simple <template>.'));
+}
+/** change begin **/
+if (this._template && this._template.hasAttribute('use-svg-content')) {
+  // move all svg content up one level and delete temporary svg node
+  var nodes = this._template.content.querySelector("svg").childNodes;
+  while (nodes.length > 0) {
+    this._template.content.appendChild(nodes[0]);
+  }
+  this._template.content.querySelector("svg").remove();
+}
+/** change ends */
+
+if (this._template && !this._template.content && window.HTMLTemplateElement && HTMLTemplateElement.decorate) {
+HTMLTemplateElement.decorate(this._template);
+}
+}
+  </script>
